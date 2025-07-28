@@ -15,11 +15,12 @@ main = Blueprint('main', __name__)
 # -------------------------
 @main.route('/')
 @main.route('/page/<int:page>')
-def index(page=1):
-    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(page, 5, False)
+def index():
+    page = request.args.get('page', 1, type=int)
+    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+        page=page, per_page=5, error_out=False
+    )
     posts = pagination.items
-    for post in posts:
-        post.content_html = Markup(markdown.markdown(post.content))
     return render_template('index.html', posts=posts, pagination=pagination)
 
 
