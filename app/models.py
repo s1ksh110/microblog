@@ -31,3 +31,17 @@ class Post(db.Model):
 
     def __repr__(self):
         return f'<Post {self.title}>'
+
+# Many-to-many relationship table
+post_tags = db.Table('post_tags',
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id')),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
+)
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True, nullable=False)
+
+class Post(db.Model):
+    # already existing fields...
+    tags = db.relationship('Tag', secondary=post_tags, backref='posts')
