@@ -1,6 +1,6 @@
 # app/routes.py
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
 from app.models import User, Post, Tag
@@ -82,7 +82,7 @@ def logout():
 
 
 # -------------------
-# Create Post with Tags
+# Create Post (HTML Form)
 # -------------------
 @main.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -113,7 +113,7 @@ def create_post():
 
 
 # -------------------
-# Edit Post with Tags
+# Edit Post
 # -------------------
 @main.route('/edit/<int:post_id>', methods=['GET', 'POST'])
 @login_required
@@ -166,3 +166,37 @@ def delete_post(post_id):
     db.session.commit()
     flash('Post deleted successfully!')
     return redirect(url_for('main.index'))
+
+
+# -------------------------
+# REST API Endpoints (JSON)
+# -------------------------
+
+# Get all posts (JSON)
+@main.route('/api/posts', methods=['GET'])
+def get_posts():
+    posts = Post.query.all()
+    return jsonify([post.to_dict() for post in posts])
+
+# Create a post via API
+@main.route('/api/posts', methods=['POST'])
+def api_create_post():  # ✅ Renamed to avoid conflict
+    data = request.get_json()
+    if not data or not all(k in data for k in ('title', 'content')):
+        return jsonify({'error': 'Missing data'}), 400
+
+    user = User.query.first()  # TEMP: Assume first user is author
+    post = Post(title=data['title'], content=data['content'], author=user)
+
+    # Handle tags
+    tag_names = data.get('tags', [])
+    for name in tag_names:
+        tag = Tag.query.filter_by(name=name).first()
+        if not tag:
+            tag = Tag(name=name)
+            db.session.add(tag)
+        post.tags.append(tag)
+
+    db.session.add(post)
+    db.session.commit()
+    return jsonify(post.to_dict()), 201

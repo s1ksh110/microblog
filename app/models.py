@@ -53,3 +53,15 @@ class Post(db.Model):
 
     def __repr__(self):
         return f'<Post {self.title}>'
+
+    def to_dict(self):
+     return {
+        'id': self.id,
+        'title': self.title,
+        'content': self.content,
+        'author': self.author.username if self.author else None,
+        'tags': [tag.name for tag in self.tags],
+        'timestamp': self.timestamp.isoformat() if self.timestamp else None
+    }
+
+
