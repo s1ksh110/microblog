@@ -200,3 +200,10 @@ def api_create_post():  # ✅ Renamed to avoid conflict
     db.session.add(post)
     db.session.commit()
     return jsonify(post.to_dict()), 201
+
+
+
+@main.route('/post/<int:post_id>')
+def post_detail(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('post_detail.html', post=post)
